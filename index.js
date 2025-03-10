@@ -7,6 +7,8 @@ const cors = require('cors');
 app.use(cors());
 app.use(bodyParser.json());
 
+const API_KEY = process.env.API_KEY;
+
 // Middleware to validate API key
 const authenticateApiKey = (req, res, next) => {
     const providedApiKey = req.headers['x-api-key']; // Get API key from request headers
