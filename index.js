@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -6,7 +7,22 @@ const cors = require('cors');
 app.use(cors());
 app.use(bodyParser.json());
 
-app.post('/get-salesforce-response', (req, res) => {
+// Middleware to validate API key
+const authenticateApiKey = (req, res, next) => {
+    const providedApiKey = req.headers['x-api-key']; // Get API key from request headers
+
+    if (!providedApiKey) {
+        return res.status(401).json({ status: 401, error: 'API key is missing' });
+    }
+
+    if (providedApiKey !== API_KEY) {
+        return res.status(403).json({ status: 403, error: 'Invalid API key' });
+    }
+
+    next(); // Proceed if API key is valid
+};
+
+app.post('/get-salesforce-response',authenticateApiKey, (req, res) => {
     console.log(req.body);
     res.json(
         {
@@ -16,8 +32,8 @@ app.post('/get-salesforce-response', (req, res) => {
     );
 });
 
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
