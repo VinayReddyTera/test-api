@@ -3,7 +3,8 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const fs = require('fs');
+const connection = require("./utilities/connection");
+const ObjectId = require('mongodb').ObjectId; 
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -25,23 +26,46 @@ const authenticateApiKey = (req, res, next) => {
     next(); // Proceed if API key is valid
 };
 
-app.use((req, res, next) => {
-  fs.appendFile('log.txt', JSON.stringify(req.body) + '\n\n', (err) => {
-    if (err) {
-      console.log(err);
+app.post('/get-salesforce-response',authenticateApiKey, async (req, res) => {
+    const collection = await connection.getData();
+    let data = await collection.create(req.body);
+    if(data){
+        res.json(
+            {
+                "status": 200,
+                "data": "Data received successfully"
+            }
+        );
     }
-  });
-  next();
+    else{
+        res.json(
+            {
+                "status": 400,
+                "data": "Data not received"
+            }
+        );
+    }
 });
 
-app.post('/get-salesforce-response',authenticateApiKey, (req, res) => {
-    console.log(req.body);
-    res.json(
-        {
-            "status": 200,
-            "data": "Data received successfully"
-        }
-    );
+app.get('/get-salesforce-data',authenticateApiKey, async (req, res) => {
+    const collection = await connection.getData();
+    let data = await collection.find({},{_id:0,__v:0});
+    if(data.length > 0){
+        res.json(
+            {
+                "status": 200,
+                "data": data
+            }
+        );
+    }
+    else{
+        res.json(
+            {
+                "status": 204,
+                "data": "No Data found"
+            }
+        );
+    }
 });
 
 const PORT = process.env.PORT || 3000;
