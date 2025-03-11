@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const fs = require('fs');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -23,6 +24,15 @@ const authenticateApiKey = (req, res, next) => {
 
     next(); // Proceed if API key is valid
 };
+
+app.use((req, res, next) => {
+  fs.appendFile('log.txt', JSON.stringify(req.body) + '\n\n', (err) => {
+    if (err) {
+      console.log(err);
+    }
+  });
+  next();
+});
 
 app.post('/get-salesforce-response',authenticateApiKey, (req, res) => {
     console.log(req.body);
